@@ -4,7 +4,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const port = process.env.PORT || 8000;
+//const port = process.env.PORT || 8000;
+const port = 8000;
 
 // Password: Uf25rZozfSY9AvhU
 // user: morahman
@@ -28,6 +29,14 @@ async function run() {
       res.send(users);
     });
 
+    //Get Specific data
+    app.get("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const cursor = userCollection.find({ _id: ObjectId(id) });
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
     // Post Data
     app.post("/users", async (req, res) => {
       const userData = req.body;
@@ -46,7 +55,7 @@ async function run() {
       const updateDoc = {
         $set: {
           name: userData.name,
-          email: userData.name,
+          email: userData.email,
         },
       };
 
@@ -60,9 +69,12 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await userCollection.deleteOne(query);
       if (result.deletedCount > 0) {
-        console.log("Successfully deleted one document.");
+        res.send({ status: 1, message: "Successfully deleted" });
       } else {
-        console.log("No documents matched the query. Deleted 0 documents.");
+        res.send({
+          status: 0,
+          message: "No documents matched the query. Deleted 0 documents.",
+        });
       }
     });
   } finally {

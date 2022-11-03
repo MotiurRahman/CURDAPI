@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 app.use(cors());
+require("dotenv").config();
 app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 //const port = process.env.PORT || 8000;
@@ -10,8 +11,9 @@ const port = 8000;
 // Password: Uf25rZozfSY9AvhU
 // user: morahman
 
-const uri =
-  "mongodb+srv://morahman:Uf25rZozfSY9AvhU@hero-one.z3ku6ig.mongodb.net/?retryWrites=true&w=majority";
+console.log(process.env.DB_USER, process.env.DB_PASSWORD);
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@hero-one.z3ku6ig.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -83,6 +85,18 @@ async function run() {
 }
 
 run().catch((err) => console.log(error));
+
+app
+  .route("/service")
+  .get((req, res) => {
+    res.send("Get a random book");
+  })
+  .post((req, res) => {
+    res.send("Add a book");
+  })
+  .put((req, res) => {
+    res.send("Update the book");
+  });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

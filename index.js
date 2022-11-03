@@ -91,6 +91,13 @@ async function run() {
       .put((req, res) => {
         res.send("Update the book");
       });
+
+    app.get("/service/:id", async (req, res) => {
+      const id = req.params.id;
+      const cursor = serviceCollection.find({ _id: ObjectId(id) });
+      const users = await cursor.toArray();
+      res.send(users[0]);
+    });
   } finally {
     //await client.close();
   }

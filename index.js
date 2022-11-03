@@ -8,12 +8,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 //const port = process.env.PORT || 8000;
 const port = 8000;
 
-// Password: Uf25rZozfSY9AvhU
-// user: morahman
-
 console.log(process.env.DB_USER, process.env.DB_PASSWORD);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@hero-one.z3ku6ig.mongodb.net/?retryWrites=true&w=majority`;
+console.log(uri);
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -23,6 +21,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const userCollection = client.db("simpleNode").collection("user");
+    const serviceCollection = client.db("geniusCar").collection("services");
 
     //Get Data
     app.get("/users", async (req, res) => {
@@ -31,7 +30,6 @@ async function run() {
       res.send(users);
     });
 
-    //Get Specific data
     app.get("/users/:id", async (req, res) => {
       const id = req.params.id;
       const cursor = userCollection.find({ _id: ObjectId(id) });
@@ -79,24 +77,26 @@ async function run() {
         });
       }
     });
+
+    app
+      .route("/service")
+      .get(async (req, res) => {
+        const cursor = serviceCollection.find({});
+        const users = await cursor.toArray();
+        res.send(users);
+      })
+      .post((req, res) => {
+        res.send("Add a book");
+      })
+      .put((req, res) => {
+        res.send("Update the book");
+      });
   } finally {
     //await client.close();
   }
 }
 
 run().catch((err) => console.log(error));
-
-app
-  .route("/service")
-  .get((req, res) => {
-    res.send("Get a random book");
-  })
-  .post((req, res) => {
-    res.send("Add a book");
-  })
-  .put((req, res) => {
-    res.send("Update the book");
-  });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

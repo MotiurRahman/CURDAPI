@@ -22,6 +22,7 @@ async function run() {
   try {
     const userCollection = client.db("simpleNode").collection("user");
     const serviceCollection = client.db("geniusCar").collection("services");
+    const ordersCollection = client.db("geniusCar").collection("orders");
 
     //Get Data
     app.get("/users", async (req, res) => {
@@ -81,7 +82,7 @@ async function run() {
     app
       .route("/service")
       .get(async (req, res) => {
-        const cursor = serviceCollection.find({});
+        const cursor = await serviceCollection.find({});
         const users = await cursor.toArray();
         res.send(users);
       })
@@ -97,6 +98,48 @@ async function run() {
       const cursor = serviceCollection.find({ _id: ObjectId(id) });
       const users = await cursor.toArray();
       res.send(users[0]);
+    });
+
+    //Orders API
+    app.post("/orders", async (req, res) => {
+      const ordersData = req.body;
+      const result = await ordersCollection.insertOne(ordersData);
+      res.send(result);
+    });
+
+    //Quiry API
+    app.get("/orders", async (req, res) => {
+      let query = {};
+      if (req.query.email) {
+        query = {
+          email: req.query.email,
+        };
+      }
+      const cursor = await ordersCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
+    });
+
+    //patch API
+    app.patch("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const status = req.body.status;
+      const updateDoc = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await ordersCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    //Delete API
+    app.delete("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
     //await client.close();

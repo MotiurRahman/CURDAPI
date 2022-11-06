@@ -8,6 +8,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 //const port = process.env.PORT || 8000;
 const port = 8000;
 
+var jwt = require("jsonwebtoken");
+
 console.log(process.env.DB_USER, process.env.DB_PASSWORD);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@hero-one.z3ku6ig.mongodb.net/?retryWrites=true&w=majority`;
@@ -18,11 +20,36 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "unauthorization access" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(401).send({ message: "unauthorization access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     const userCollection = client.db("simpleNode").collection("user");
     const serviceCollection = client.db("geniusCar").collection("services");
     const ordersCollection = client.db("geniusCar").collection("orders");
+
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      var token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
 
     //Get Data
     app.get("/users", async (req, res) => {
@@ -108,7 +135,13 @@ async function run() {
     });
 
     //Quiry API
-    app.get("/orders", async (req, res) => {
+    app.get("/orders", verifyJWT, async (req, res) => {
+      const decode = req.decoded;
+      console.log("inside order API", decode);
+      if (decode.email != req.query.email) {
+        return res.status(401).send({ message: "unauthorization access" });
+      }
+
       let query = {};
       if (req.query.email) {
         query = {

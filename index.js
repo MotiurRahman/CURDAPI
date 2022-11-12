@@ -109,7 +109,22 @@ async function run() {
     app
       .route("/service")
       .get(async (req, res) => {
-        const cursor = await serviceCollection.find({});
+        const search = req.query.search;
+
+        let query = {};
+
+        if (search.length != 0) {
+          query = {
+            $text: {
+              $search: search,
+            },
+          };
+        }
+
+        const order = req.query.order === "asc" ? 1 : -1;
+        const cursor = await serviceCollection
+          .find(query)
+          .sort({ price: order });
         const users = await cursor.toArray();
         res.send(users);
       })
